@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -211,6 +211,7 @@ struct mdss_mdp_ctl {
 	struct mdss_mdp_mixer *mixer_right;
 	struct mutex lock;
 	struct mutex *shared_lock;
+	struct mutex *wb_lock;
 	spinlock_t spin_lock;
 
 	struct mdss_panel_data *panel_data;
@@ -442,6 +443,7 @@ struct mdss_mdp_pipe {
 
 	struct mdp_overlay req_data;
 	u32 params_changed;
+	bool dirty;
 
 	struct mdss_mdp_pipe_smp_map smp_map[MAX_PLANES];
 
@@ -477,6 +479,7 @@ struct mdss_overlay_private {
 	struct mutex list_lock;
 	struct list_head pipes_used;
 	struct list_head pipes_cleanup;
+	struct list_head pipes_destroy;
 	struct list_head rot_proc_list;
 	bool mixer_swap;
 
@@ -849,4 +852,6 @@ int mdss_mdp_wb_set_secure(struct msm_fb_data_type *mfd, int enable);
 int mdss_mdp_wb_get_secure(struct msm_fb_data_type *mfd, uint8_t *enable);
 void mdss_mdp_ctl_restore(void);
 int  mdss_mdp_ctl_reset(struct mdss_mdp_ctl *ctl);
+int mdss_mdp_user_pcc_config(struct mdp_pcc_cfg_data *config);
+
 #endif /* MDSS_MDP_H */

@@ -279,14 +279,14 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			for (i = 0; i < pdata->panel_info.rst_seq_len; ++i) {
 				gpio_set_value((ctrl_pdata->rst_gpio),
 					pdata->panel_info.rst_seq[i]);
-#ifdef CONFIG_MACH_OPPO
-				if (gpio_is_valid(ctrl_pdata->lcd_5v_en_gpio))
-					gpio_direction_output((ctrl_pdata->lcd_5v_en_gpio),
-							pdata->panel_info.rst_seq[i]);
-#endif
 				if (pdata->panel_info.rst_seq[++i])
 					usleep(pinfo->rst_seq[i] * 1000);
 			}
+#ifdef CONFIG_MACH_OPPO
+			if (gpio_is_valid(ctrl_pdata->lcd_5v_en_gpio)) {
+				gpio_direction_output(ctrl_pdata->lcd_5v_en_gpio, 1);
+			}
+#endif
 		}
 
 		if (gpio_is_valid(ctrl_pdata->mode_gpio)) {
@@ -585,8 +585,6 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 
 	if (ctrl->on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->on_cmds);
-
-	mdss_livedisplay_update(ctrl, MODE_UPDATE_ALL);
 
 end:
 	pinfo->blank_state = MDSS_PANEL_BLANK_UNBLANK;
@@ -1422,13 +1420,15 @@ int mdss_dsi_panel_init(struct device_node *node,
 	pinfo = &ctrl_pdata->panel_data.panel_info;
 
 	pr_debug("%s:%d\n", __func__, __LINE__);
+	pinfo->panel_name[0] = '\0';
 	panel_name = of_get_property(node, "qcom,mdss-dsi-panel-name", NULL);
-	if (!panel_name)
+	if (!panel_name) {
 		pr_info("%s:%d, Panel name not specified\n",
 						__func__, __LINE__);
-	else
+	} else {
 		pr_info("%s: Panel Name = %s\n", __func__, panel_name);
-
+		strlcpy(&pinfo->panel_name[0], panel_name, MDSS_MAX_PANEL_LEN);
+	}
 	rc = mdss_panel_parse_dt(node, ctrl_pdata);
 	if (rc) {
 		pr_err("%s:%d panel dt parse failed\n", __func__, __LINE__);
